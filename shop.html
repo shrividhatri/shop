@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping places</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: #f4f4f4;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #searchBar {
+            width: 90%;
+            max-width: 400px;
+            padding: 10px;
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .grid-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            text-align: center;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .grid-item h3 {
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+        }
+
+        .modal-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .modal-content ul li {
+            margin-bottom: 10px;
+        }
+
+        .close-btn {
+            background: #ff5c5c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            background: #ff2c2c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <input type="text" id="searchBar" placeholder="Search places..." aria-label="Search places">
+    </header>
+    <div class="grid" id="placesGrid"></div>
+
+    <div class="modal" id="placeModal" role="dialog" aria-labelledby="placeTitle">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModal">Close</button>
+            <h2 id="placeTitle"></h2>
+            <h3>Distance</h3>
+            <p id="placeDistance"></p>
+            <h3>Cost</h3>
+            <p id="placePurpose"></p>
+        </div>
+    </div>
+
+    <script>
+        // Places data directly embedded in the file
+        const places = [
+    
+    {
+        "name": "Wednesday market",
+        "image": "https://content.jdmagicbox.com/v2/comp/hyderabad/q4/040pxx40.xx40.220317154530.j8q4/catalogue/balanagar-vegetable-market-hyderabad-vegetable-vendors-y1dkd7irkw-250.jpg",
+        "distance": "2 km",
+        "purpose": "20-150 Rs"
+    },
+    {
+        "name": "Koti Market",
+        "image": "https://content.jdmagicbox.com/v2/comp/hyderabad/n4/040pxx40.xx40.220327170753.m4n4/catalogue/koti-marketing-sultan-bazar-koti-hyderabad-mobile-phone-accessory-dealers-5dqykcc3og.jpg",
+        "distance": "15 km",
+        "purpose": "150-300 Rs"
+    },
+    {
+        "name": "Sarath City",
+        "image": "https://imgmedia.lbb.in/media/2023/07/64c35634851c5f06c39e58de_1690523188509.jpg",
+        "distance": "3-4 km",
+        "purpose": "200-400 Rs"
+    }
+]
+;
+
+        const placesGrid = document.getElementById('placesGrid');
+        const placeModal = document.getElementById('placeModal');
+        const closeModal = document.getElementById('closeModal');
+        const placeTitle = document.getElementById('placeTitle');
+        const placeDistance = document.getElementById('placeDistance');
+        const placePurpose = document.getElementById('placePurpose');
+        const searchBar = document.getElementById('searchBar');
+
+        // Populate the grid with places
+        function populateGrid(places) {
+            placesGrid.innerHTML = '';
+            places.forEach((place, index) => {
+                const gridItem = document.createElement('div');
+                gridItem.classList.add('grid-item');
+                gridItem.setAttribute('tabindex', '0');
+                gridItem.setAttribute('role', 'button');
+                gridItem.setAttribute('aria-label', `Open place: ${place.name}`);
+                gridItem.innerHTML = `
+                    <img src="${place.image}" alt="${place.name}">
+                    <h3>${place.name}</h3>
+                `;
+                gridItem.addEventListener('click', () => displayPlace(index));
+                gridItem.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') displayPlace(index);
+                });
+                placesGrid.appendChild(gridItem);
+            });
+        }
+
+        // Display place details in modal
+        function displayPlace(index) {
+            const place = places[index];
+            placeTitle.textContent = place.name;
+            placeDistance.textContent = place.distance;
+            placePurpose.textContent = place.purpose;
+            placeModal.style.display = 'flex';
+        }
+
+        // Close modal
+        closeModal.addEventListener('click', () => {
+            placeModal.style.display = 'none';
+        });
+
+        // Close modal on clicking outside
+        placeModal.addEventListener('click', (event) => {
+            if (event.target === placeModal) {
+                placeModal.style.display = 'none';
+            }
+        });
+
+        // Filter places based on search
+        searchBar.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filteredPlaces = places.filter(place =>
+                place.name.toLowerCase().includes(query)
+            );
+            populateGrid(query ? filteredPlaces : places);
+        });
+
+        // Initialize the grid with all places
+        populateGrid(places);
+    </script>
+</body>
+</html>
